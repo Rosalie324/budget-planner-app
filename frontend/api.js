@@ -2,6 +2,7 @@
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3001/api' 
     : 'https://votre-backend.onrender.com/api';
+app.use(express.static('.')); // Sert les fichiers HTML/CSS/JS
 
 let currentUserId = null;
 
@@ -74,4 +75,5 @@ async function saveSavingsGoal(userId, goalAmount, month, year) {
         body: JSON.stringify({ user_id: userId, goal_amount: goalAmount, month, year })
     });
     return await response.json();
+    
 }
