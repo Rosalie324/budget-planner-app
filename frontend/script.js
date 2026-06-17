@@ -1,3 +1,7 @@
+// ========================================
+// script.js - Logique de l'application
+// ========================================
+
 let monthlySalary = 0;
 let miniJob = 0;
 let expenses = [];
@@ -5,12 +9,18 @@ let savingsGoal = 0;
 let expenseChart = null;
 let yearProgressChart = null;
 
+// Variables pour la navigation mensuelle
 let currentViewDate = new Date();
 let isViewingHistory = false;
 
+// Palette de couleurs pastel
+const pastelColors = [
+    '#FFB7B2', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF',
+    '#A0C4FF', '#BDB2FF', '#FFC6FF', '#C4E3CB', '#FFD1BA',
+    '#E0BBE4', '#FEC8D8', '#FFF5BA', '#B5EAD7', '#C7CEEA'
+];
 
-const pastelColors = ['#FFB7B2','#FFD6A5','#FDFFB6','#CAFFBF','#9BF6FF','#A0C4FF','#BDB2FF','#FFC6FF','#C4E3CB','#FFD1BA','#E0BBE4','#FEC8D8','#FFF5BA','#B5EAD7','#C7CEEA'];
-
+// Catégories
 const categories = {
     'transport-gas': { name: 'Gas', icon: '⛽' },
     'transport-insurance': { name: 'Car Insurance', icon: '🚗' },
@@ -42,15 +52,31 @@ const categories = {
 };
 
 function updatePreviewAmount() {
-    const preview = document.getElementById('previewAmount');
-    if (preview) preview.textContent = savingsGoal.toFixed(2) + ' €';
+    const previewSpan = document.getElementById('previewAmount');
+    if (previewSpan) {
+        previewSpan.textContent = savingsGoal.toFixed(2) + ' €';
+    }
 }
 
-function getTotalIncome() { return monthlySalary + miniJob; }
-function getTotalExpenses() { return expenses.reduce((sum, exp) => sum + exp.amount, 0); }
-function getActualSavings() { return getTotalIncome() - getTotalExpenses(); }
-function getLeftToSpend() { return Math.max(0, getTotalIncome() - getTotalExpenses() - savingsGoal); }
+function getTotalIncome() {
+    return monthlySalary + miniJob;
+}
 
+function getTotalExpenses() {
+    return expenses.reduce((sum, exp) => sum + exp.amount, 0);
+}
+
+function getActualSavings() {
+    return getTotalIncome() - getTotalExpenses();
+}
+
+function getLeftToSpend() {
+    const income = getTotalIncome();
+    const expensesTotal = getTotalExpenses();
+    return Math.max(0, income - expensesTotal - savingsGoal);
+}
+
+// Mettre à jour l'affichage
 function updateDashboard() {
     const totalIncome = getTotalIncome();
     const totalExpenses = getTotalExpenses();
@@ -65,40 +91,74 @@ function updateDashboard() {
     
     if (savingsGoal > 0) {
         const progress = Math.min(100, Math.max(0, (actualSavings / savingsGoal) * 100));
-        document.getElementById('savingsProgress').innerHTML = progress >= 100 ? '🎉 Objectif atteint ! 🎉' : `📈 ${progress.toFixed(1)}% de l'objectif`;
-        document.getElementById('savingsProgress').style.color = progress >= 100 ? '#4CAF50' : '#B5DAF9';
+        if (progress >= 100) {
+            document.getElementById('savingsProgress').innerHTML = '🎉 Objectif atteint ! 🎉';
+            document.getElementById('savingsProgress').style.color = '#4CAF50';
+        } else {
+            document.getElementById('savingsProgress').innerHTML = `📈 ${progress.toFixed(1)}% de l'objectif`;
+            document.getElementById('savingsProgress').style.color = '#B5DAF9';
+        }
     } else {
         document.getElementById('savingsProgress').innerHTML = '💰 Fixe un objectif !';
         document.getElementById('savingsProgress').style.color = '#B5DAF9';
     }
     
     const leftWarning = document.getElementById('leftWarning');
-    if (leftToSpend < 0) { leftWarning.innerHTML = '⚠️ Budget dépassé ! ⚠️'; leftWarning.style.color = '#FFB7B2'; }
-    else if (leftToSpend < 50) { leftWarning.innerHTML = '🍀 Fais attention !'; leftWarning.style.color = '#FFD6A5'; }
-    else { leftWarning.innerHTML = '✨ Tu gères bien ! ✨'; leftWarning.style.color = '#B5DAF9'; }
+    if (leftToSpend < 0) {
+        leftWarning.innerHTML = '⚠️ Budget dépassé ! ⚠️';
+        leftWarning.style.color = '#FFB7B2';
+    } else if (leftToSpend < 50) {
+        leftWarning.innerHTML = '🍀 Fais attention !';
+        leftWarning.style.color = '#FFD6A5';
+    } else {
+        leftWarning.innerHTML = '✨ Tu gères bien ! ✨';
+        leftWarning.style.color = '#B5DAF9';
+    }
     
-    const msg = document.getElementById('motivationMessage');
-    if (savingsGoal > 0 && actualSavings >= savingsGoal) msg.textContent = '🎉✨ OBJECTIF D\'ÉPARGNE ATTEINT ! Tu es une star ! ✨🎉';
-    else if (savingsGoal > 0 && actualSavings > 0) msg.textContent = `💪💵 Bravo ! Il te reste ${(savingsGoal - actualSavings).toFixed(2)} € à économiser ! 💵💪`;
-    else if (leftToSpend > 200) msg.textContent = '💰✨ Tu as de la marge ! Pense à ton épargne ! ✨💰';
-    else if (leftToSpend > 0) msg.textContent = '🍀💰 Tout va bien ! Continue comme ça ! 💰🍀';
-    else if (leftToSpend === 0) msg.textContent = '⚖️💵 Budget équilibré ! Parfait ! 💵⚖️';
-    else msg.textContent = '⚠️💰 Attention ! Réduis tes dépenses ! 💰⚠️';
+    updateMotivationMessage(actualSavings, savingsGoal, leftToSpend);
+}
+
+function updateMotivationMessage(actualSavings, savingsGoal, leftToSpend) {
+    const messageDiv = document.getElementById('motivationMessage');
+    let message = '';
+    
+    if (savingsGoal > 0 && actualSavings >= savingsGoal) {
+        message = '🎉✨ OBJECTIF D\'ÉPARGNE ATTEINT ! Tu es une star ! Continue à faire des BAGS ! ✨🎉';
+    } else if (savingsGoal > 0 && actualSavings > 0) {
+        const remaining = savingsGoal - actualSavings;
+        message = `💪💵 Bravo ! Il te reste ${remaining.toFixed(2)} € à économiser pour atteindre ton objectif. Tu peux le faire ! 💵💪`;
+    } else if (leftToSpend > 200) {
+        message = '💰✨ Tu as de la marge ! Pense à ton objectif d\'épargne pour faire encore plus de BAGS ! ✨💰';
+    } else if (leftToSpend > 0) {
+        message = '🍀💰 Tout va bien ! Continue comme ça et n\'oublie pas ton épargne ! 💰🍀';
+    } else if (leftToSpend === 0) {
+        message = '⚖️💵 Budget équilibré ! Parfait pour atteindre tes objectifs ! 💵⚖️';
+    } else {
+        message = '⚠️💰 Attention ! Réduis tes dépenses pour protéger ton épargne ! 💰⚠️';
+    }
+    
+    messageDiv.textContent = message;
 }
 
 function displayExpenses() {
     const container = document.getElementById('expensesList');
     const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-    if (sorted.length === 0) { container.innerHTML = '<div class="empty-state">💵 Pas encore de dépenses ! 💵</div>'; return; }
+    
+    if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-state">💵 Pas encore de dépenses pour ce mois ! 💵</div>';
+        return;
+    }
+    
     container.innerHTML = sorted.map(exp => {
         const catInfo = categories[exp.category];
         const catDisplay = catInfo ? `${catInfo.icon} ${catInfo.name}` : exp.category;
+        
         return `
             <div class="expense-item">
                 <div class="expense-info">
-                    <div class="expense-name">${exp.name}</div>
+                    <div class="expense-name">${escapeHtml(exp.name)}</div>
                     <div class="expense-category">${catDisplay}</div>
-                    <div class="expense-date">${new Date(exp.date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div class="expense-date">${formatDate(exp.date)}</div>
                 </div>
                 <div class="expense-amount">${exp.amount.toFixed(2)} €</div>
                 ${!isViewingHistory ? `<button class="delete-expense" onclick="deleteExpense('${exp.id}')">🗑️</button>` : ''}
@@ -109,210 +169,457 @@ function displayExpenses() {
 
 function updateChartForExpenses(expensesData) {
     const ctx = document.getElementById('expenseChart').getContext('2d');
+    
     const categoryTotals = {};
     let colorIndex = 0;
-    expensesData.forEach(exp => {
-        const catInfo = categories[exp.category];
-        const name = catInfo ? `${catInfo.icon} ${catInfo.name}` : exp.category;
-        if (!categoryTotals[name]) { categoryTotals[name] = { total: 0, color: pastelColors[colorIndex % pastelColors.length] }; colorIndex++; }
-        categoryTotals[name].total += exp.amount;
+    
+    expensesData.forEach(expense => {
+        const catInfo = categories[expense.category];
+        const displayName = catInfo ? `${catInfo.icon} ${catInfo.name}` : expense.category;
+        
+        if (!categoryTotals[displayName]) {
+            categoryTotals[displayName] = {
+                total: 0,
+                color: pastelColors[colorIndex % pastelColors.length]
+            };
+            colorIndex++;
+        }
+        categoryTotals[displayName].total += expense.amount;
     });
+    
     const labels = Object.keys(categoryTotals);
     const data = labels.map(l => categoryTotals[l].total);
     const colors = labels.map(l => categoryTotals[l].color);
-    if (expenseChart) expenseChart.destroy();
+    
+    if (expenseChart) {
+        expenseChart.destroy();
+    }
+    
     if (data.length > 0 && data.some(d => d > 0)) {
         expenseChart = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 15 }] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { const total = ctx.dataset.data.reduce((a,b) => a+b, 0); return `${ctx.label}: ${ctx.raw.toFixed(2)} € (${((ctx.raw/total)*100).toFixed(1)}%)`; } } } }, cutout: '60%' }
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.raw.toFixed(2)} € (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
         });
-        const legendDiv = document.getElementById('chartLegend');
-        const total = Object.values(categoryTotals).reduce((s, cat) => s + cat.total, 0);
-        legendDiv.innerHTML = Object.entries(categoryTotals).map(([name, data]) => `<div class="legend-item"><div class="legend-color" style="background:${data.color}"></div><span>${name}</span><span style="font-weight:600;">${((data.total/total)*100).toFixed(1)}%</span></div>`).join('');
+        updateLegend(categoryTotals);
     } else {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.font = '16px Quicksand'; ctx.fillStyle = '#FBB1D3'; ctx.textAlign = 'center';
+        ctx.font = '16px Quicksand';
+        ctx.fillStyle = '#FBB1D3';
+        ctx.textAlign = 'center';
         ctx.fillText('💰 Ajoute des dépenses pour voir ton camembert 💰', ctx.canvas.width/2, ctx.canvas.height/2);
         document.getElementById('chartLegend').innerHTML = '<div style="text-align:center; color:#B5DAF9;">💵 Pas encore de dépenses 💵</div>';
     }
 }
 
-async function updateYearProgressChart() {
-    const year = new Date().getFullYear();
-    const months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
-    const totals = [], incomes = [], savings = [];
-    for (let i = 1; i <= 12; i++) {
-        const exp = await fetchExpenses(currentUserId, i, year);
-        const inc = await fetchIncomes(currentUserId, i, year);
-        const total = exp.reduce((s, e) => s + e.amount, 0);
-        const income = (inc.monthly_salary || 0) + (inc.mini_job || 0);
-        totals.push(total); incomes.push(income); savings.push(income - total);
+function updateLegend(categoryTotals) {
+    const legendDiv = document.getElementById('chartLegend');
+    const total = Object.values(categoryTotals).reduce((sum, cat) => sum + cat.total, 0);
+    
+    if (total === 0) {
+        legendDiv.innerHTML = '<div style="text-align:center; color:#B5DAF9;">💵 Ajoute des dépenses 💵</div>';
+        return;
     }
+    
+    legendDiv.innerHTML = Object.entries(categoryTotals).map(([name, data]) => {
+        const percent = ((data.total / total) * 100).toFixed(1);
+        return `
+            <div class="legend-item">
+                <div class="legend-color" style="background: ${data.color}"></div>
+                <span>${name}</span>
+                <span style="font-weight:600;">${percent}%</span>
+            </div>
+        `;
+    }).join('');
+}
+
+async function updateYearProgressChart() {
+    const currentYear = new Date().getFullYear();
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const monthlyTotals = [];
+    const monthlyIncomes = [];
+    const monthlySavings = [];
+    
+    for (let i = 1; i <= 12; i++) {
+        const expensesData = await fetchExpenses(currentUserId, i, currentYear);
+        const monthTotal = expensesData.reduce((sum, exp) => sum + exp.amount, 0);
+        const incomesData = await fetchIncomes(currentUserId, i, currentYear);
+        const monthIncome = (incomesData.monthly_salary || 0) + (incomesData.mini_job || 0);
+        
+        monthlyTotals.push(monthTotal);
+        monthlyIncomes.push(monthIncome);
+        monthlySavings.push(monthIncome - monthTotal);
+    }
+    
     const ctx = document.getElementById('yearProgressChart').getContext('2d');
-    if (yearProgressChart) yearProgressChart.destroy();
+    
+    if (yearProgressChart) {
+        yearProgressChart.destroy();
+    }
+    
     yearProgressChart = new Chart(ctx, {
         type: 'bar',
-        data: { labels: months, datasets: [
-            { label: 'Dépenses', data: totals, backgroundColor: '#FBB1D3', borderRadius: 10, borderSkipped: false },
-            { label: 'Revenus', data: incomes, backgroundColor: '#B5DAF9', borderRadius: 10, borderSkipped: false },
-            { label: 'Épargne', data: savings, backgroundColor: '#CAFFBF', borderRadius: 10, borderSkipped: false }
-        ] },
-        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 12 }, usePointStyle: true, boxWidth: 10 } } }, scales: { y: { beginAtZero: true, grid: { color: '#FED8EC' }, ticks: { callback: v => v + ' €' } }, x: { grid: { display: false } } } }
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Dépenses',
+                    data: monthlyTotals,
+                    backgroundColor: '#FBB1D3',
+                    borderRadius: 10,
+                    borderSkipped: false
+                },
+                {
+                    label: 'Revenus',
+                    data: monthlyIncomes,
+                    backgroundColor: '#B5DAF9',
+                    borderRadius: 10,
+                    borderSkipped: false
+                },
+                {
+                    label: 'Épargne',
+                    data: monthlySavings,
+                    backgroundColor: '#CAFFBF',
+                    borderRadius: 10,
+                    borderSkipped: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: { family: 'Quicksand', size: 12 },
+                        usePointStyle: true,
+                        boxWidth: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw.toFixed(2)} €`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#FED8EC' },
+                    ticks: { callback: (v) => v + ' €' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
     });
-    const totalYearExpenses = totals.reduce((a,b) => a+b, 0);
-    const totalYearIncome = incomes.reduce((a,b) => a+b, 0);
+    
+    const totalYearExpenses = monthlyTotals.reduce((a, b) => a + b, 0);
+    const totalYearIncome = monthlyIncomes.reduce((a, b) => a + b, 0);
+    const totalYearSavings = totalYearIncome - totalYearExpenses;
+    const avgMonthlyExpense = totalYearExpenses / 12;
+    
     document.getElementById('yearStats').innerHTML = `
-        <div class="year-stat-card"><div class="stat-label">📊 Total dépenses annuelles</div><div class="stat-number">${totalYearExpenses.toFixed(2)} €</div></div>
-        <div class="year-stat-card"><div class="stat-label">💰 Total revenus annuels</div><div class="stat-number">${totalYearIncome.toFixed(2)} €</div></div>
-        <div class="year-stat-card"><div class="stat-label">🐷 Épargne annuelle</div><div class="stat-number">${(totalYearIncome - totalYearExpenses).toFixed(2)} €</div></div>
-        <div class="year-stat-card"><div class="stat-label">📈 Moyenne mensuelle</div><div class="stat-number">${(totalYearExpenses / 12).toFixed(2)} €</div></div>
+        <div class="year-stat-card">
+            <div class="stat-label">📊 Total dépenses annuelles</div>
+            <div class="stat-number">${totalYearExpenses.toFixed(2)} €</div>
+        </div>
+        <div class="year-stat-card">
+            <div class="stat-label">💰 Total revenus annuels</div>
+            <div class="stat-number">${totalYearIncome.toFixed(2)} €</div>
+        </div>
+        <div class="year-stat-card">
+            <div class="stat-label">🐷 Épargne annuelle</div>
+            <div class="stat-number">${totalYearSavings.toFixed(2)} €</div>
+        </div>
+        <div class="year-stat-card">
+            <div class="stat-label">📈 Moyenne mensuelle</div>
+            <div class="stat-number">${avgMonthlyExpense.toFixed(2)} €</div>
+        </div>
     `;
 }
 
+// Mettre à jour l'affichage selon le mois sélectionné
+async function updateDisplayForMonth() {
+    const year = currentViewDate.getFullYear();
+    const month = currentViewDate.getMonth() + 1;
+    const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    
+    document.getElementById('expensesList').innerHTML = '<div class="loading">Chargement...</div>';
+    
+    await loadDataFromAPI();
+    
+    const monthExpenses = expenses;
+    const monthTotalExpenses = getTotalExpenses();
+    const monthIncome = getTotalIncome();
+    const monthSavings = getActualSavings();
+    const monthLeft = getLeftToSpend();
+    
+    const monthDisplay = isViewingHistory ? `${monthNames[month-1]} ${year}` : `${monthNames[month-1]} ${year} (Mois en cours)`;
+    document.getElementById('currentMonthDisplay').innerHTML = `<span class="month-icon">📅</span> ${monthDisplay}`;
+    
+    const viewBadge = document.getElementById('viewBadge');
+    if (isViewingHistory) {
+        viewBadge.innerHTML = `📊 Vue: ${monthNames[month-1]} ${year}`;
+        viewBadge.style.background = '#FFF1C2';
+        document.getElementById('expensesSectionTitle').innerHTML = `📋 Dépenses du ${monthNames[month-1]} ${year}`;
+        document.getElementById('addExpenseBtn').disabled = true;
+        document.getElementById('addExpenseBtn').style.opacity = '0.5';
+        document.getElementById('addExpenseBtn').style.cursor = 'not-allowed';
+    } else {
+        viewBadge.innerHTML = `📊 Vue: Mois en cours - ${monthNames[month-1]} ${year}`;
+        viewBadge.style.background = 'rgba(255, 255, 255, 0.9)';
+        document.getElementById('expensesSectionTitle').innerHTML = `📝 Ajouter une dépense 📝`;
+        document.getElementById('addExpenseBtn').disabled = false;
+        document.getElementById('addExpenseBtn').style.opacity = '1';
+        document.getElementById('addExpenseBtn').style.cursor = 'pointer';
+    }
+    
+    document.getElementById('totalIncomeDisplay').textContent = monthIncome.toFixed(2) + ' €';
+    document.getElementById('totalExpensesDisplay').textContent = monthTotalExpenses.toFixed(2) + ' €';
+    document.getElementById('savingsGoalDisplay').textContent = savingsGoal.toFixed(2) + ' €';
+    document.getElementById('actualSavingsDisplay').textContent = monthSavings.toFixed(2) + ' €';
+    document.getElementById('leftDisplay').textContent = monthLeft.toFixed(2) + ' €';
+    
+    displayExpenses();
+    updateChartForExpenses(monthExpenses);
+    updateDashboard();
+}
+
+// Charger les données depuis l'API
 async function loadDataFromAPI() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth() + 1;
+    
     try {
         const incomes = await fetchIncomes(currentUserId, month, year);
         monthlySalary = incomes.monthly_salary || 0;
         miniJob = incomes.mini_job || 0;
         document.getElementById('monthlySalary').value = monthlySalary;
         document.getElementById('miniJob').value = miniJob;
+        
         expenses = await fetchExpenses(currentUserId, month, year);
+        
         const goal = await fetchSavingsGoal(currentUserId, month, year);
         savingsGoal = goal.goal_amount || 0;
         document.getElementById('savingsGoal').value = savingsGoal;
         updatePreviewAmount();
-    } catch(e) { console.error(e); }
-}
-
-async function updateDisplayForMonth() {
-    const year = currentViewDate.getFullYear();
-    const month = currentViewDate.getMonth() + 1;
-    const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-    document.getElementById('expensesList').innerHTML = '<div class="loading">Chargement...</div>';
-    await loadDataFromAPI();
-    const monthDisplay = isViewingHistory ? `${monthNames[month-1]} ${year}` : `${monthNames[month-1]} ${year} (Mois en cours)`;
-    document.getElementById('currentMonthDisplay').innerHTML = `<span class="month-icon">📅</span> ${monthDisplay}`;
-    const badge = document.getElementById('viewBadge');
-    if (isViewingHistory) {
-        badge.innerHTML = `📊 Vue: ${monthNames[month-1]} ${year}`;
-        badge.style.background = '#FFF1C2';
-        document.getElementById('expensesSectionTitle').innerHTML = `📋 Dépenses du ${monthNames[month-1]} ${year}`;
-        document.getElementById('addExpenseBtn').disabled = true;
-        document.getElementById('addExpenseBtn').style.opacity = '0.5';
-        document.getElementById('addExpenseBtn').style.cursor = 'not-allowed';
-    } else {
-        badge.innerHTML = `📊 Vue: Mois en cours - ${monthNames[month-1]} ${year}`;
-        badge.style.background = 'rgba(255,255,255,0.9)';
-        document.getElementById('expensesSectionTitle').innerHTML = `📝 Ajouter une dépense 📝`;
-        document.getElementById('addExpenseBtn').disabled = false;
-        document.getElementById('addExpenseBtn').style.opacity = '1';
-        document.getElementById('addExpenseBtn').style.cursor = 'pointer';
+    } catch (error) {
+        console.error('Erreur chargement des données:', error);
     }
-    document.getElementById('totalIncomeDisplay').textContent = getTotalIncome().toFixed(2) + ' €';
-    document.getElementById('totalExpensesDisplay').textContent = getTotalExpenses().toFixed(2) + ' €';
-    document.getElementById('savingsGoalDisplay').textContent = savingsGoal.toFixed(2) + ' €';
-    document.getElementById('actualSavingsDisplay').textContent = getActualSavings().toFixed(2) + ' €';
-    document.getElementById('leftDisplay').textContent = getLeftToSpend().toFixed(2) + ' €';
-    displayExpenses();
-    updateChartForExpenses(expenses);
-    updateDashboard();
 }
 
-function goToPreviousMonth() { currentViewDate.setMonth(currentViewDate.getMonth() - 1); isViewingHistory = true; updateDisplayForMonth(); }
+function goToPreviousMonth() {
+    currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+    isViewingHistory = true;
+    updateDisplayForMonth();
+}
+
 function goToNextMonth() {
     const today = new Date();
     const nextMonth = new Date(currentViewDate);
     nextMonth.setMonth(currentViewDate.getMonth() + 1);
-    if (nextMonth > today && isViewingHistory) return;
+    
+    if (nextMonth > today && isViewingHistory) {
+        return;
+    }
+    
     currentViewDate.setMonth(currentViewDate.getMonth() + 1);
-    if (currentViewDate > today) goToCurrentMonth();
-    else { isViewingHistory = true; updateDisplayForMonth(); }
-}
-function goToCurrentMonth() { currentViewDate = new Date(); isViewingHistory = false; updateDisplayForMonth(); }
-function toggleSavingsSection() {
-    document.getElementById('savingsGoalContent').classList.toggle('collapsed');
-    document.getElementById('collapseIcon').classList.toggle('collapsed');
+    
+    if (currentViewDate > today) {
+        goToCurrentMonth();
+    } else {
+        isViewingHistory = true;
+        updateDisplayForMonth();
+    }
 }
 
-async function addExpense(e) {
-    e.preventDefault();
-    if (isViewingHistory) { alert('📅 Reviens au mois en cours pour ajouter des dépenses.'); return; }
+function goToCurrentMonth() {
+    currentViewDate = new Date();
+    isViewingHistory = false;
+    updateDisplayForMonth();
+}
+
+function toggleSavingsSection() {
+    const content = document.getElementById('savingsGoalContent');
+    const icon = document.getElementById('collapseIcon');
+    
+    content.classList.toggle('collapsed');
+    icon.classList.toggle('collapsed');
+}
+
+// Ajouter une dépense
+async function addExpense(event) {
+    event.preventDefault();
+    
+    if (isViewingHistory) {
+        alert('📅 Tu es en mode historique ! Reviens au mois en cours pour ajouter des dépenses.');
+        return;
+    }
+    
     const category = document.getElementById('category').value;
     const name = document.getElementById('itemName').value;
     const amount = parseFloat(document.getElementById('amount').value);
     const date = document.getElementById('date').value;
+    
     if (!category || !name || !amount || !date) return;
+    
     try {
         await addExpenseAPI(currentUserId, category, name, amount, date);
         await updateDisplayForMonth();
         await updateYearProgressChart();
+        
         document.getElementById('expenseForm').reset();
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
-    } catch(e) { alert('Erreur lors de l\'ajout.'); }
-}
-
-async function deleteExpense(id) {
-    if (isViewingHistory) { alert('📅 Reviens au mois en cours pour modifier.'); return; }
-    if (confirm('Supprimer cette dépense ?')) {
-        try { await deleteExpenseAPI(id); await updateDisplayForMonth(); await updateYearProgressChart(); }
-        catch(e) { alert('Erreur lors de la suppression.'); }
+        setDefaultDate();
+    } catch (error) {
+        alert('Erreur lors de l\'ajout de la dépense. Vérifiez que le backend est accessible.');
     }
 }
 
+// Supprimer une dépense
+async function deleteExpense(id) {
+    if (isViewingHistory) {
+        alert('📅 Tu es en mode historique ! Reviens au mois en cours pour modifier des dépenses.');
+        return;
+    }
+    
+    if (confirm('Supprimer cette dépense ?')) {
+        try {
+            await deleteExpenseAPI(id);
+            await updateDisplayForMonth();
+            await updateYearProgressChart();
+        } catch (error) {
+            alert('Erreur lors de la suppression.');
+        }
+    }
+}
+
+// Mettre à jour les revenus
 async function updateIncome() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth() + 1;
+    
     monthlySalary = parseFloat(document.getElementById('monthlySalary').value) || 0;
     miniJob = parseFloat(document.getElementById('miniJob').value) || 0;
+    
     try {
         await saveIncomes(currentUserId, monthlySalary, miniJob, month, year);
         await updateDisplayForMonth();
         await updateYearProgressChart();
+        
         const btn = document.getElementById('updateIncomeBtn');
+        const originalText = btn.textContent;
         btn.textContent = '✅ Mis à jour ! ✅';
-        setTimeout(() => btn.textContent = '💵 Mettre à jour mes revenus 💵', 1500);
-    } catch(e) { alert('Erreur de mise à jour.'); }
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 1500);
+    } catch (error) {
+        alert('Erreur lors de la mise à jour des revenus.');
+    }
 }
 
+// Mettre à jour l'objectif d'épargne
 async function updateSavingsGoal() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth() + 1;
+    
     savingsGoal = parseFloat(document.getElementById('savingsGoal').value) || 0;
+    
     try {
         await saveSavingsGoal(currentUserId, savingsGoal, month, year);
         await updateDisplayForMonth();
         updatePreviewAmount();
+        
         const btn = document.getElementById('updateSavingsGoalBtn');
+        const originalText = btn.textContent;
         btn.textContent = '🎯 Objectif enregistré ! 🎯';
-        setTimeout(() => btn.textContent = '🎯 Valider mon objectif 🎯', 1500);
-    } catch(e) { alert('Erreur de mise à jour.'); }
-}
-
-async function handleLogin() {
-    const email = document.getElementById('userEmail').value;
-    if (!email) { alert('Veuillez entrer votre email'); return; }
-    try {
-        const btn = document.getElementById('loginBtn');
-        btn.textContent = '⏳ Connexion...';
-        btn.disabled = true;
-        await getOrCreateUser(email);
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('appContent').style.display = 'block';
-        await updateDisplayForMonth();
-        await updateYearProgressChart();
-    } catch(e) {
-        alert('Erreur de connexion. Vérifiez le backend.');
-        document.getElementById('loginBtn').textContent = '🚀 Commencer 🚀';
-        document.getElementById('loginBtn').disabled = false;
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 1500);
+    } catch (error) {
+        alert('Erreur lors de la mise à jour de l\'objectif.');
     }
 }
 
+// Login
+async function handleLogin() {
+    const email = document.getElementById('userEmail').value;
+    if (!email) {
+        alert('Veuillez entrer votre email');
+        return;
+    }
+    
+    try {
+        const btn = document.getElementById('loginBtn');
+        const originalText = btn.textContent;
+        btn.textContent = '⏳ Connexion...';
+        btn.disabled = true;
+        
+        await getOrCreateUser(email);
+        
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+        
+        await updateDisplayForMonth();
+        await updateYearProgressChart();
+    } catch (error) {
+        alert('Erreur de connexion. Vérifiez que le backend est en ligne.');
+        const btn = document.getElementById('loginBtn');
+        btn.textContent = '🚀 Commencer 🚀';
+        btn.disabled = false;
+    }
+}
+
+// Utilitaires
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('fr-FR', options);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function setDefaultDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+}
+
+// Vérifier si l'utilisateur est déjà connecté
 async function checkExistingUser() {
     const savedUserId = localStorage.getItem('userId');
     const savedEmail = localStorage.getItem('userEmail');
+    
     if (savedUserId && savedEmail) {
         currentUserId = savedUserId;
         document.getElementById('loginSection').style.display = 'none';
@@ -323,8 +630,10 @@ async function checkExistingUser() {
     }
 }
 
+// Initialisation
 function init() {
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    setDefaultDate();
+    
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('updateIncomeBtn').addEventListener('click', updateIncome);
         document.getElementById('updateSavingsGoalBtn').addEventListener('click', updateSavingsGoal);
@@ -334,9 +643,13 @@ function init() {
         document.getElementById('nextMonthBtn').addEventListener('click', goToNextMonth);
         document.getElementById('currentMonthBtn').addEventListener('click', goToCurrentMonth);
         document.getElementById('loginBtn').addEventListener('click', handleLogin);
-        document.getElementById('userEmail').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+        document.getElementById('userEmail').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+        
         checkExistingUser();
     });
 }
 
+// Démarrer l'application
 init();
