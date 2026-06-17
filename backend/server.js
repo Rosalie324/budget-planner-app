@@ -11,6 +11,9 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Servir les fichiers statiques du dossier frontend
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
 // Initialisation Supabase
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -19,7 +22,7 @@ const supabase = createClient(
 
 // ============ ROUTES API ============
 
-// Récupérer les revenus d'un utilisateur pour un mois
+// Récupérer les revenus
 app.get('/api/incomes/:userId/:month/:year', async (req, res) => {
     const { userId, month, year } = req.params;
     
@@ -27,11 +30,11 @@ app.get('/api/incomes/:userId/:month/:year', async (req, res) => {
         .from('incomes')
         .select('*')
         .eq('user_id', userId)
-        .eq('month', month)
-        .eq('year', year)
-        .single();
+        .eq('month', parseInt(month))
+        .eq('year', parseInt(year))
+        .maybeSingle();
     
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
         return res.status(500).json({ error: error.message });
     }
     
@@ -42,7 +45,7 @@ app.get('/api/incomes/:userId/:month/:year', async (req, res) => {
 app.post('/api/incomes', async (req, res) => {
     const { user_id, monthly_salary, mini_job, month, year } = req.body;
     
-    const { data, error } = await supabase
+    const { error } = await supabase
         .from('incomes')
         .upsert({
             user_id,
@@ -62,7 +65,7 @@ app.post('/api/incomes', async (req, res) => {
     res.json({ success: true });
 });
 
-// Récupérer les dépenses d'un utilisateur
+// Récupérer les dépenses
 app.get('/api/expenses/:userId', async (req, res) => {
     const { userId } = req.params;
     const { month, year } = req.query;
@@ -128,11 +131,11 @@ app.get('/api/savings-goal/:userId/:month/:year', async (req, res) => {
         .from('savings_goals')
         .select('goal_amount')
         .eq('user_id', userId)
-        .eq('month', month)
-        .eq('year', year)
-        .single();
+        .eq('month', parseInt(month))
+        .eq('year', parseInt(year))
+        .maybeSingle();
     
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
         return res.status(500).json({ error: error.message });
     }
     
@@ -170,7 +173,7 @@ app.post('/api/users', async (req, res) => {
         .from('users')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
     
     if (existingUser) {
         return res.json(existingUser);
@@ -189,6 +192,16 @@ app.post('/api/users', async (req, res) => {
     res.json(data);
 });
 
+// Route pour la racine - sert index.html du dossier frontend
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+});
+
+// Route de test
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', message: 'API Budget Planner fonctionne !' });
+});
+
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
