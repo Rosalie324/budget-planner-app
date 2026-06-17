@@ -3,7 +3,6 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 require('dotenv').config();
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,8 +11,18 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Servir les fichiers statiques du dossier frontend
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// ==== SERVE LES FICHIERS DU DOSSIER frontend/ ====
+// Cherche les fichiers dans le dossier frontend
+const frontendPath = path.join(__dirname, '..', 'frontend');
+console.log('📁 Dossier frontend:', frontendPath);
+
+// Servir les fichiers statiques depuis frontend/
+app.use(express.static(frontendPath));
+
+// Route pour la racine - sert index.html du dossier frontend
+app.get('/', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // Initialisation Supabase
 const supabase = createClient(
@@ -193,16 +202,18 @@ app.post('/api/users', async (req, res) => {
     res.json(data);
 });
 
-// Route pour la racine - sert index.html du dossier frontend
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
-});
-
-// Route de test
+// Route de test - vérifier que tout fonctionne
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'API Budget Planner fonctionne !' });
+    res.json({ 
+        status: 'ok', 
+        message: 'API Budget Planner fonctionne !',
+        frontendPath: frontendPath,
+        files: require('fs').readdirSync(frontendPath)
+    });
 });
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📁 Serving frontend from: ${frontendPath}`);
+    console.log(`🌐 URL: http://localhost:${PORT}`);
 });
