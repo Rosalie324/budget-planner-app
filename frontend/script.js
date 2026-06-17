@@ -51,8 +51,30 @@ const categories = {
     'resp-housebill': { name: 'House bill', icon: '💡' }
 };
 
+// ============ FONCTIONS UTILITAIRES ============
+
+function getElement(id) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn(`⚠️ Élément "${id}" non trouvé dans le DOM`);
+    }
+    return el;
+}
+
+function setTextContent(id, value) {
+    const el = getElement(id);
+    if (el) el.textContent = value;
+}
+
+function setInnerHTML(id, html) {
+    const el = getElement(id);
+    if (el) el.innerHTML = html;
+}
+
+// ============ FONCTIONS PRINCIPALES ============
+
 function updatePreviewAmount() {
-    const previewSpan = document.getElementById('previewAmount');
+    const previewSpan = getElement('previewAmount');
     if (previewSpan) {
         previewSpan.textContent = savingsGoal.toFixed(2) + ' €';
     }
@@ -83,43 +105,50 @@ function updateDashboard() {
     const actualSavings = getActualSavings();
     const leftToSpend = getLeftToSpend();
     
-    document.getElementById('totalIncomeDisplay').textContent = totalIncome.toFixed(2) + ' €';
-    document.getElementById('totalExpensesDisplay').textContent = totalExpenses.toFixed(2) + ' €';
-    document.getElementById('savingsGoalDisplay').textContent = savingsGoal.toFixed(2) + ' €';
-    document.getElementById('actualSavingsDisplay').textContent = actualSavings.toFixed(2) + ' €';
-    document.getElementById('leftDisplay').textContent = leftToSpend.toFixed(2) + ' €';
+    setTextContent('totalIncomeDisplay', totalIncome.toFixed(2) + ' €');
+    setTextContent('totalExpensesDisplay', totalExpenses.toFixed(2) + ' €');
+    setTextContent('savingsGoalDisplay', savingsGoal.toFixed(2) + ' €');
+    setTextContent('actualSavingsDisplay', actualSavings.toFixed(2) + ' €');
+    setTextContent('leftDisplay', leftToSpend.toFixed(2) + ' €');
     
-    if (savingsGoal > 0) {
-        const progress = Math.min(100, Math.max(0, (actualSavings / savingsGoal) * 100));
-        if (progress >= 100) {
-            document.getElementById('savingsProgress').innerHTML = '🎉 Objectif atteint ! 🎉';
-            document.getElementById('savingsProgress').style.color = '#4CAF50';
+    const savingsProgress = getElement('savingsProgress');
+    if (savingsProgress) {
+        if (savingsGoal > 0) {
+            const progress = Math.min(100, Math.max(0, (actualSavings / savingsGoal) * 100));
+            if (progress >= 100) {
+                savingsProgress.innerHTML = '🎉 Objectif atteint ! 🎉';
+                savingsProgress.style.color = '#4CAF50';
+            } else {
+                savingsProgress.innerHTML = `📈 ${progress.toFixed(1)}% de l'objectif`;
+                savingsProgress.style.color = '#B5DAF9';
+            }
         } else {
-            document.getElementById('savingsProgress').innerHTML = `📈 ${progress.toFixed(1)}% de l'objectif`;
-            document.getElementById('savingsProgress').style.color = '#B5DAF9';
+            savingsProgress.innerHTML = '💰 Fixe un objectif !';
+            savingsProgress.style.color = '#B5DAF9';
         }
-    } else {
-        document.getElementById('savingsProgress').innerHTML = '💰 Fixe un objectif !';
-        document.getElementById('savingsProgress').style.color = '#B5DAF9';
     }
     
-    const leftWarning = document.getElementById('leftWarning');
-    if (leftToSpend < 0) {
-        leftWarning.innerHTML = '⚠️ Budget dépassé ! ⚠️';
-        leftWarning.style.color = '#FFB7B2';
-    } else if (leftToSpend < 50) {
-        leftWarning.innerHTML = '🍀 Fais attention !';
-        leftWarning.style.color = '#FFD6A5';
-    } else {
-        leftWarning.innerHTML = '✨ Tu gères bien ! ✨';
-        leftWarning.style.color = '#B5DAF9';
+    const leftWarning = getElement('leftWarning');
+    if (leftWarning) {
+        if (leftToSpend < 0) {
+            leftWarning.innerHTML = '⚠️ Budget dépassé ! ⚠️';
+            leftWarning.style.color = '#FFB7B2';
+        } else if (leftToSpend < 50) {
+            leftWarning.innerHTML = '🍀 Fais attention !';
+            leftWarning.style.color = '#FFD6A5';
+        } else {
+            leftWarning.innerHTML = '✨ Tu gères bien ! ✨';
+            leftWarning.style.color = '#B5DAF9';
+        }
     }
     
     updateMotivationMessage(actualSavings, savingsGoal, leftToSpend);
 }
 
 function updateMotivationMessage(actualSavings, savingsGoal, leftToSpend) {
-    const messageDiv = document.getElementById('motivationMessage');
+    const messageDiv = getElement('motivationMessage');
+    if (!messageDiv) return;
+    
     let message = '';
     
     if (savingsGoal > 0 && actualSavings >= savingsGoal) {
@@ -141,7 +170,9 @@ function updateMotivationMessage(actualSavings, savingsGoal, leftToSpend) {
 }
 
 function displayExpenses() {
-    const container = document.getElementById('expensesList');
+    const container = getElement('expensesList');
+    if (!container) return;
+    
     const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
     
     if (sorted.length === 0) {
@@ -168,7 +199,10 @@ function displayExpenses() {
 }
 
 function updateChartForExpenses(expensesData) {
-    const ctx = document.getElementById('expenseChart').getContext('2d');
+    const canvas = getElement('expenseChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     
     const categoryTotals = {};
     let colorIndex = 0;
@@ -232,12 +266,17 @@ function updateChartForExpenses(expensesData) {
         ctx.fillStyle = '#FBB1D3';
         ctx.textAlign = 'center';
         ctx.fillText('💰 Ajoute des dépenses pour voir ton camembert 💰', ctx.canvas.width/2, ctx.canvas.height/2);
-        document.getElementById('chartLegend').innerHTML = '<div style="text-align:center; color:#B5DAF9;">💵 Pas encore de dépenses 💵</div>';
+        const legendDiv = getElement('chartLegend');
+        if (legendDiv) {
+            legendDiv.innerHTML = '<div style="text-align:center; color:#B5DAF9;">💵 Pas encore de dépenses 💵</div>';
+        }
     }
 }
 
 function updateLegend(categoryTotals) {
-    const legendDiv = document.getElementById('chartLegend');
+    const legendDiv = getElement('chartLegend');
+    if (!legendDiv) return;
+    
     const total = Object.values(categoryTotals).reduce((sum, cat) => sum + cat.total, 0);
     
     if (total === 0) {
@@ -275,7 +314,10 @@ async function updateYearProgressChart() {
         monthlySavings.push(monthIncome - monthTotal);
     }
     
-    const ctx = document.getElementById('yearProgressChart').getContext('2d');
+    const canvas = getElement('yearProgressChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
     
     if (yearProgressChart) {
         yearProgressChart.destroy();
@@ -347,24 +389,27 @@ async function updateYearProgressChart() {
     const totalYearSavings = totalYearIncome - totalYearExpenses;
     const avgMonthlyExpense = totalYearExpenses / 12;
     
-    document.getElementById('yearStats').innerHTML = `
-        <div class="year-stat-card">
-            <div class="stat-label">📊 Total dépenses annuelles</div>
-            <div class="stat-number">${totalYearExpenses.toFixed(2)} €</div>
-        </div>
-        <div class="year-stat-card">
-            <div class="stat-label">💰 Total revenus annuels</div>
-            <div class="stat-number">${totalYearIncome.toFixed(2)} €</div>
-        </div>
-        <div class="year-stat-card">
-            <div class="stat-label">🐷 Épargne annuelle</div>
-            <div class="stat-number">${totalYearSavings.toFixed(2)} €</div>
-        </div>
-        <div class="year-stat-card">
-            <div class="stat-label">📈 Moyenne mensuelle</div>
-            <div class="stat-number">${avgMonthlyExpense.toFixed(2)} €</div>
-        </div>
-    `;
+    const yearStats = getElement('yearStats');
+    if (yearStats) {
+        yearStats.innerHTML = `
+            <div class="year-stat-card">
+                <div class="stat-label">📊 Total dépenses annuelles</div>
+                <div class="stat-number">${totalYearExpenses.toFixed(2)} €</div>
+            </div>
+            <div class="year-stat-card">
+                <div class="stat-label">💰 Total revenus annuels</div>
+                <div class="stat-number">${totalYearIncome.toFixed(2)} €</div>
+            </div>
+            <div class="year-stat-card">
+                <div class="stat-label">🐷 Épargne annuelle</div>
+                <div class="stat-number">${totalYearSavings.toFixed(2)} €</div>
+            </div>
+            <div class="year-stat-card">
+                <div class="stat-label">📈 Moyenne mensuelle</div>
+                <div class="stat-number">${avgMonthlyExpense.toFixed(2)} €</div>
+            </div>
+        `;
+    }
 }
 
 // Mettre à jour l'affichage selon le mois sélectionné
@@ -373,7 +418,10 @@ async function updateDisplayForMonth() {
     const month = currentViewDate.getMonth() + 1;
     const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
     
-    document.getElementById('expensesList').innerHTML = '<div class="loading">Chargement...</div>';
+    const expensesList = getElement('expensesList');
+    if (expensesList) {
+        expensesList.innerHTML = '<div class="loading">Chargement...</div>';
+    }
     
     await loadDataFromAPI();
     
@@ -384,30 +432,44 @@ async function updateDisplayForMonth() {
     const monthLeft = getLeftToSpend();
     
     const monthDisplay = isViewingHistory ? `${monthNames[month-1]} ${year}` : `${monthNames[month-1]} ${year} (Mois en cours)`;
-    document.getElementById('currentMonthDisplay').innerHTML = `<span class="month-icon">📅</span> ${monthDisplay}`;
     
-    const viewBadge = document.getElementById('viewBadge');
-    if (isViewingHistory) {
-        viewBadge.innerHTML = `📊 Vue: ${monthNames[month-1]} ${year}`;
-        viewBadge.style.background = '#FFF1C2';
-        document.getElementById('expensesSectionTitle').innerHTML = `📋 Dépenses du ${monthNames[month-1]} ${year}`;
-        document.getElementById('addExpenseBtn').disabled = true;
-        document.getElementById('addExpenseBtn').style.opacity = '0.5';
-        document.getElementById('addExpenseBtn').style.cursor = 'not-allowed';
-    } else {
-        viewBadge.innerHTML = `📊 Vue: Mois en cours - ${monthNames[month-1]} ${year}`;
-        viewBadge.style.background = 'rgba(255, 255, 255, 0.9)';
-        document.getElementById('expensesSectionTitle').innerHTML = `📝 Ajouter une dépense 📝`;
-        document.getElementById('addExpenseBtn').disabled = false;
-        document.getElementById('addExpenseBtn').style.opacity = '1';
-        document.getElementById('addExpenseBtn').style.cursor = 'pointer';
+    const currentMonthDisplay = getElement('currentMonthDisplay');
+    if (currentMonthDisplay) {
+        currentMonthDisplay.innerHTML = `<span class="month-icon">📅</span> ${monthDisplay}`;
     }
     
-    document.getElementById('totalIncomeDisplay').textContent = monthIncome.toFixed(2) + ' €';
-    document.getElementById('totalExpensesDisplay').textContent = monthTotalExpenses.toFixed(2) + ' €';
-    document.getElementById('savingsGoalDisplay').textContent = savingsGoal.toFixed(2) + ' €';
-    document.getElementById('actualSavingsDisplay').textContent = monthSavings.toFixed(2) + ' €';
-    document.getElementById('leftDisplay').textContent = monthLeft.toFixed(2) + ' €';
+    const viewBadge = getElement('viewBadge');
+    if (viewBadge) {
+        if (isViewingHistory) {
+            viewBadge.innerHTML = `📊 Vue: ${monthNames[month-1]} ${year}`;
+            viewBadge.style.background = '#FFF1C2';
+        } else {
+            viewBadge.innerHTML = `📊 Vue: Mois en cours - ${monthNames[month-1]} ${year}`;
+            viewBadge.style.background = 'rgba(255, 255, 255, 0.9)';
+        }
+    }
+    
+    const expensesTitle = getElement('expensesSectionTitle');
+    if (expensesTitle) {
+        if (isViewingHistory) {
+            expensesTitle.innerHTML = `📋 Dépenses du ${monthNames[month-1]} ${year}`;
+        } else {
+            expensesTitle.innerHTML = `📝 Ajouter une dépense 📝`;
+        }
+    }
+    
+    const addBtn = getElement('addExpenseBtn');
+    if (addBtn) {
+        addBtn.disabled = isViewingHistory;
+        addBtn.style.opacity = isViewingHistory ? '0.5' : '1';
+        addBtn.style.cursor = isViewingHistory ? 'not-allowed' : 'pointer';
+    }
+    
+    setTextContent('totalIncomeDisplay', monthIncome.toFixed(2) + ' €');
+    setTextContent('totalExpensesDisplay', monthTotalExpenses.toFixed(2) + ' €');
+    setTextContent('savingsGoalDisplay', savingsGoal.toFixed(2) + ' €');
+    setTextContent('actualSavingsDisplay', monthSavings.toFixed(2) + ' €');
+    setTextContent('leftDisplay', monthLeft.toFixed(2) + ' €');
     
     displayExpenses();
     updateChartForExpenses(monthExpenses);
@@ -423,14 +485,19 @@ async function loadDataFromAPI() {
         const incomes = await fetchIncomes(currentUserId, month, year);
         monthlySalary = incomes.monthly_salary || 0;
         miniJob = incomes.mini_job || 0;
-        document.getElementById('monthlySalary').value = monthlySalary;
-        document.getElementById('miniJob').value = miniJob;
+        
+        const monthlySalaryEl = getElement('monthlySalary');
+        const miniJobEl = getElement('miniJob');
+        if (monthlySalaryEl) monthlySalaryEl.value = monthlySalary;
+        if (miniJobEl) miniJobEl.value = miniJob;
         
         expenses = await fetchExpenses(currentUserId, month, year);
         
         const goal = await fetchSavingsGoal(currentUserId, month, year);
         savingsGoal = goal.goal_amount || 0;
-        document.getElementById('savingsGoal').value = savingsGoal;
+        
+        const savingsGoalEl = getElement('savingsGoal');
+        if (savingsGoalEl) savingsGoalEl.value = savingsGoal;
         updatePreviewAmount();
     } catch (error) {
         console.error('Erreur chargement des données:', error);
@@ -469,11 +536,11 @@ function goToCurrentMonth() {
 }
 
 function toggleSavingsSection() {
-    const content = document.getElementById('savingsGoalContent');
-    const icon = document.getElementById('collapseIcon');
+    const content = getElement('savingsGoalContent');
+    const icon = getElement('collapseIcon');
     
-    content.classList.toggle('collapsed');
-    icon.classList.toggle('collapsed');
+    if (content) content.classList.toggle('collapsed');
+    if (icon) icon.classList.toggle('collapsed');
 }
 
 // Ajouter une dépense
@@ -485,10 +552,17 @@ async function addExpense(event) {
         return;
     }
     
-    const category = document.getElementById('category').value;
-    const name = document.getElementById('itemName').value;
-    const amount = parseFloat(document.getElementById('amount').value);
-    const date = document.getElementById('date').value;
+    const categoryEl = getElement('category');
+    const nameEl = getElement('itemName');
+    const amountEl = getElement('amount');
+    const dateEl = getElement('date');
+    
+    if (!categoryEl || !nameEl || !amountEl || !dateEl) return;
+    
+    const category = categoryEl.value;
+    const name = nameEl.value;
+    const amount = parseFloat(amountEl.value);
+    const date = dateEl.value;
     
     if (!category || !name || !amount || !date) return;
     
@@ -497,7 +571,8 @@ async function addExpense(event) {
         await updateDisplayForMonth();
         await updateYearProgressChart();
         
-        document.getElementById('expenseForm').reset();
+        const form = getElement('expenseForm');
+        if (form) form.reset();
         setDefaultDate();
     } catch (error) {
         alert('Erreur lors de l\'ajout de la dépense. Vérifiez que le backend est accessible.');
@@ -527,20 +602,25 @@ async function updateIncome() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth() + 1;
     
-    monthlySalary = parseFloat(document.getElementById('monthlySalary').value) || 0;
-    miniJob = parseFloat(document.getElementById('miniJob').value) || 0;
+    const monthlySalaryEl = getElement('monthlySalary');
+    const miniJobEl = getElement('miniJob');
+    
+    if (monthlySalaryEl) monthlySalary = parseFloat(monthlySalaryEl.value) || 0;
+    if (miniJobEl) miniJob = parseFloat(miniJobEl.value) || 0;
     
     try {
         await saveIncomes(currentUserId, monthlySalary, miniJob, month, year);
         await updateDisplayForMonth();
         await updateYearProgressChart();
         
-        const btn = document.getElementById('updateIncomeBtn');
-        const originalText = btn.textContent;
-        btn.textContent = '✅ Mis à jour ! ✅';
-        setTimeout(() => {
-            btn.textContent = originalText;
-        }, 1500);
+        const btn = getElement('updateIncomeBtn');
+        if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Mis à jour ! ✅';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 1500);
+        }
     } catch (error) {
         alert('Erreur lors de la mise à jour des revenus.');
     }
@@ -551,19 +631,24 @@ async function updateSavingsGoal() {
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth() + 1;
     
-    savingsGoal = parseFloat(document.getElementById('savingsGoal').value) || 0;
+    const savingsGoalEl = getElement('savingsGoal');
+    if (savingsGoalEl) {
+        savingsGoal = parseFloat(savingsGoalEl.value) || 0;
+    }
     
     try {
         await saveSavingsGoal(currentUserId, savingsGoal, month, year);
         await updateDisplayForMonth();
         updatePreviewAmount();
         
-        const btn = document.getElementById('updateSavingsGoalBtn');
-        const originalText = btn.textContent;
-        btn.textContent = '🎯 Objectif enregistré ! 🎯';
-        setTimeout(() => {
-            btn.textContent = originalText;
-        }, 1500);
+        const btn = getElement('updateSavingsGoalBtn');
+        if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = '🎯 Objectif enregistré ! 🎯';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 1500);
+        }
     } catch (error) {
         alert('Erreur lors de la mise à jour de l\'objectif.');
     }
@@ -571,30 +656,39 @@ async function updateSavingsGoal() {
 
 // Login
 async function handleLogin() {
-    const email = document.getElementById('userEmail').value;
+    const userEmailEl = getElement('userEmail');
+    if (!userEmailEl) return;
+    
+    const email = userEmailEl.value;
     if (!email) {
         alert('Veuillez entrer votre email');
         return;
     }
     
     try {
-        const btn = document.getElementById('loginBtn');
-        const originalText = btn.textContent;
-        btn.textContent = '⏳ Connexion...';
-        btn.disabled = true;
+        const btn = getElement('loginBtn');
+        if (btn) {
+            btn.textContent = '⏳ Connexion...';
+            btn.disabled = true;
+        }
         
         await getOrCreateUser(email);
         
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('appContent').style.display = 'block';
+        const loginSection = getElement('loginSection');
+        const appContent = getElement('appContent');
+        
+        if (loginSection) loginSection.style.display = 'none';
+        if (appContent) appContent.style.display = 'block';
         
         await updateDisplayForMonth();
         await updateYearProgressChart();
     } catch (error) {
         alert('Erreur de connexion. Vérifiez que le backend est en ligne.');
-        const btn = document.getElementById('loginBtn');
-        btn.textContent = '🚀 Commencer 🚀';
-        btn.disabled = false;
+        const btn = getElement('loginBtn');
+        if (btn) {
+            btn.textContent = '🚀 Commencer 🚀';
+            btn.disabled = false;
+        }
     }
 }
 
@@ -611,12 +705,10 @@ function escapeHtml(text) {
 }
 
 function setDefaultDate() {
-    const dateInput = document.getElementById('date');
+    const dateInput = getElement('date');
     if (dateInput) {
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
-    } else {
-        console.log('⚠️ Élément "date" non trouvé');
     }
 }
 
@@ -627,9 +719,10 @@ async function checkExistingUser() {
     
     if (savedUserId && savedEmail) {
         currentUserId = savedUserId;
-        const loginSection = document.getElementById('loginSection');
-        const appContent = document.getElementById('appContent');
-        const userEmail = document.getElementById('userEmail');
+        
+        const loginSection = getElement('loginSection');
+        const appContent = getElement('appContent');
+        const userEmail = getElement('userEmail');
         
         if (loginSection) loginSection.style.display = 'none';
         if (appContent) appContent.style.display = 'block';
@@ -645,25 +738,26 @@ function init() {
     document.addEventListener('DOMContentLoaded', function() {
         setDefaultDate();
         
-        // Boutons et événements
-        const updateIncomeBtn = document.getElementById('updateIncomeBtn');
-        const updateSavingsBtn = document.getElementById('updateSavingsGoalBtn');
-        const expenseForm = document.getElementById('expenseForm');
-        const savingsHeader = document.getElementById('savingsGoalHeader');
-        const prevBtn = document.getElementById('prevMonthBtn');
-        const nextBtn = document.getElementById('nextMonthBtn');
-        const currentBtn = document.getElementById('currentMonthBtn');
-        const loginBtn = document.getElementById('loginBtn');
-        const userEmail = document.getElementById('userEmail');
+        // Liste des éléments à attacher
+        const events = [
+            { id: 'updateIncomeBtn', event: 'click', handler: updateIncome },
+            { id: 'updateSavingsGoalBtn', event: 'click', handler: updateSavingsGoal },
+            { id: 'expenseForm', event: 'submit', handler: addExpense },
+            { id: 'savingsGoalHeader', event: 'click', handler: toggleSavingsSection },
+            { id: 'prevMonthBtn', event: 'click', handler: goToPreviousMonth },
+            { id: 'nextMonthBtn', event: 'click', handler: goToNextMonth },
+            { id: 'currentMonthBtn', event: 'click', handler: goToCurrentMonth },
+            { id: 'loginBtn', event: 'click', handler: handleLogin }
+        ];
         
-        if (updateIncomeBtn) updateIncomeBtn.addEventListener('click', updateIncome);
-        if (updateSavingsBtn) updateSavingsBtn.addEventListener('click', updateSavingsGoal);
-        if (expenseForm) expenseForm.addEventListener('submit', addExpense);
-        if (savingsHeader) savingsHeader.addEventListener('click', toggleSavingsSection);
-        if (prevBtn) prevBtn.addEventListener('click', goToPreviousMonth);
-        if (nextBtn) nextBtn.addEventListener('click', goToNextMonth);
-        if (currentBtn) currentBtn.addEventListener('click', goToCurrentMonth);
-        if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+        for (const { id, event, handler } of events) {
+            const el = getElement(id);
+            if (el) {
+                el.addEventListener(event, handler);
+            }
+        }
+        
+        const userEmail = getElement('userEmail');
         if (userEmail) {
             userEmail.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') handleLogin();
