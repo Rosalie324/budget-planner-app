@@ -7,7 +7,7 @@ let yearProgressChart = null;
 
 let currentViewDate = new Date();
 let isViewingHistory = false;
-let currentUserId = null;
+
 
 const pastelColors = ['#FFB7B2','#FFD6A5','#FDFFB6','#CAFFBF','#9BF6FF','#A0C4FF','#BDB2FF','#FFC6FF','#C4E3CB','#FFD1BA','#E0BBE4','#FEC8D8','#FFF5BA','#B5EAD7','#C7CEEA'];
 
