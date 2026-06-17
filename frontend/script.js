@@ -611,8 +611,13 @@ function escapeHtml(text) {
 }
 
 function setDefaultDate() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').value = today;
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    } else {
+        console.log('⚠️ Élément "date" non trouvé');
+    }
 }
 
 // Vérifier si l'utilisateur est déjà connecté
@@ -622,9 +627,14 @@ async function checkExistingUser() {
     
     if (savedUserId && savedEmail) {
         currentUserId = savedUserId;
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('appContent').style.display = 'block';
-        document.getElementById('userEmail').value = savedEmail;
+        const loginSection = document.getElementById('loginSection');
+        const appContent = document.getElementById('appContent');
+        const userEmail = document.getElementById('userEmail');
+        
+        if (loginSection) loginSection.style.display = 'none';
+        if (appContent) appContent.style.display = 'block';
+        if (userEmail) userEmail.value = savedEmail;
+        
         await updateDisplayForMonth();
         await updateYearProgressChart();
     }
@@ -632,20 +642,33 @@ async function checkExistingUser() {
 
 // Initialisation
 function init() {
-    setDefaultDate();
-    
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('updateIncomeBtn').addEventListener('click', updateIncome);
-        document.getElementById('updateSavingsGoalBtn').addEventListener('click', updateSavingsGoal);
-        document.getElementById('expenseForm').addEventListener('submit', addExpense);
-        document.getElementById('savingsGoalHeader').addEventListener('click', toggleSavingsSection);
-        document.getElementById('prevMonthBtn').addEventListener('click', goToPreviousMonth);
-        document.getElementById('nextMonthBtn').addEventListener('click', goToNextMonth);
-        document.getElementById('currentMonthBtn').addEventListener('click', goToCurrentMonth);
-        document.getElementById('loginBtn').addEventListener('click', handleLogin);
-        document.getElementById('userEmail').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleLogin();
-        });
+        setDefaultDate();
+        
+        // Boutons et événements
+        const updateIncomeBtn = document.getElementById('updateIncomeBtn');
+        const updateSavingsBtn = document.getElementById('updateSavingsGoalBtn');
+        const expenseForm = document.getElementById('expenseForm');
+        const savingsHeader = document.getElementById('savingsGoalHeader');
+        const prevBtn = document.getElementById('prevMonthBtn');
+        const nextBtn = document.getElementById('nextMonthBtn');
+        const currentBtn = document.getElementById('currentMonthBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const userEmail = document.getElementById('userEmail');
+        
+        if (updateIncomeBtn) updateIncomeBtn.addEventListener('click', updateIncome);
+        if (updateSavingsBtn) updateSavingsBtn.addEventListener('click', updateSavingsGoal);
+        if (expenseForm) expenseForm.addEventListener('submit', addExpense);
+        if (savingsHeader) savingsHeader.addEventListener('click', toggleSavingsSection);
+        if (prevBtn) prevBtn.addEventListener('click', goToPreviousMonth);
+        if (nextBtn) nextBtn.addEventListener('click', goToNextMonth);
+        if (currentBtn) currentBtn.addEventListener('click', goToCurrentMonth);
+        if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+        if (userEmail) {
+            userEmail.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleLogin();
+            });
+        }
         
         checkExistingUser();
     });
