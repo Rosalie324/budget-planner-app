@@ -1,5 +1,5 @@
 // Configuration API
-// Remplacez par l'URL de VOTRE backend Render
+// 🔴 CHANGEZ cette URL par la vôtre si ce n'est pas déjà fait
 const API_URL = 'https://budget-planner-app-5run.onrender.com/api';
 
 let currentUserId = null;
