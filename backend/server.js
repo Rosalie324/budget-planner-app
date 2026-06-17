@@ -175,33 +175,62 @@ app.post('/api/savings-goal', async (req, res) => {
     res.json({ success: true });
 });
 
+
 // Créer ou récupérer un utilisateur
 app.post('/api/users', async (req, res) => {
     const { email } = req.body;
+    console.log('📧 Tentative de connexion avec:', email);
     
-    let { data: existingUser, error: findError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
-    
-    if (existingUser) {
-        return res.json(existingUser);
+    try {
+        // 1. Vérifier si l'utilisateur existe
+        console.log('🔍 Recherche de l\'utilisateur...');
+        const { data: existingUser, error: findError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+        
+        if (findError) {
+            console.log('❌ Erreur de recherche:', findError);
+            return res.status(500).json({ 
+                error: 'Erreur de recherche', 
+                details: findError.message 
+            });
+        }
+        
+        // 2. Si l'utilisateur existe, le retourner
+        if (existingUser) {
+            console.log('✅ Utilisateur existant:', existingUser.id);
+            return res.json(existingUser);
+        }
+        
+        // 3. Sinon, créer un nouvel utilisateur
+        console.log('🆕 Création d\'un nouvel utilisateur...');
+        const { data: newUser, error: insertError } = await supabase
+            .from('users')
+            .insert([{ email }])
+            .select()
+            .single();
+        
+        if (insertError) {
+            console.log('❌ Erreur de création:', insertError);
+            return res.status(500).json({ 
+                error: 'Erreur de création', 
+                details: insertError.message 
+            });
+        }
+        
+        console.log('✅ Utilisateur créé:', newUser.id);
+        res.json(newUser);
+        
+    } catch (err) {
+        console.log('❌ Erreur inattendue:', err);
+        res.status(500).json({ 
+            error: 'Erreur inattendue', 
+            details: err.message 
+        });
     }
-    
-    const { data, error } = await supabase
-        .from('users')
-        .insert([{ email }])
-        .select()
-        .single();
-    
-    if (error) {
-        return res.status(500).json({ error: error.message });
-    }
-    
-    res.json(data);
 });
-
 // Route de test - vérifier que tout fonctionne
 app.get('/api/health', (req, res) => {
     res.json({ 
