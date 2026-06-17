@@ -9,20 +9,227 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 <body>
-    <!-- Login Section -->
-    <div id="loginSection" class="login-overlay">
-        <div class="login-card">
-            <div class="cute-icon">💎</div>
-            <h2>Bienvenue sur Budget Planner</h2>
-            <p>Entre ton email pour commencer</p>
-            <input type="email" id="userEmail" placeholder="ton.email@exemple.com" class="cute-input">
-            <button id="loginBtn" class="btn-cute">🚀 Commencer 🚀</button>
-        </div>
+    <div class="cute-bg">
+        <div class="sparkle sparkle-1">💰</div>
+        <div class="sparkle sparkle-2">💵</div>
+        <div class="sparkle sparkle-3">💸</div>
+        <div class="sparkle sparkle-4">🪙</div>
+        <div class="sparkle sparkle-5">💎</div>
+        <div class="sparkle sparkle-6">💷</div>
     </div>
 
-    <!-- Reste de votre HTML (même structure que précédemment) -->
-    <div id="appContent" style="display: none;">
-        <!-- Tout votre contenu actuel ici -->
+    <div class="container">
+        <!-- Login Section -->
+        <div id="loginSection" class="login-overlay">
+            <div class="login-card">
+                <div class="cute-icon">💎</div>
+                <h2>Bienvenue sur Budget Planner</h2>
+                <p>Entre ton email pour commencer</p>
+                <input type="email" id="userEmail" placeholder="ton.email@exemple.com" class="cute-input">
+                <button id="loginBtn" class="btn-cute">🚀 Commencer 🚀</button>
+            </div>
+        </div>
+
+        <!-- Application Content -->
+        <div id="appContent" style="display: none;">
+            <header>
+                <div class="header-content">
+                    <div class="cute-emoji">💰</div>
+                    <h1>🌸 Budget Planner 🌸</h1>
+                    <p class="subtitle">♪・*:・°✨ Making Bags ✨°・:*・♪</p>
+                </div>
+            </header>
+
+            <!-- Section Revenus -->
+            <div class="income-section">
+                <h2>💰 Mes Revenus 💰</h2>
+                <div class="income-cards">
+                    <div class="income-card">
+                        <label for="monthlySalary" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                            <div class="cute-icon">💼</div>
+                            <span>Monthly Salary</span>
+                        </label>
+                        <input type="number" id="monthlySalary" class="cute-input" placeholder="0.00 €" step="0.01">
+                    </div>
+                    <div class="income-card">
+                        <label for="miniJob" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                            <div class="cute-icon">🎀</div>
+                            <span>Mini Job</span>
+                        </label>
+                        <input type="number" id="miniJob" class="cute-input" placeholder="0.00 €" step="0.01">
+                    </div>
+                </div>
+                <button id="updateIncomeBtn" class="btn-cute">💵 Mettre à jour mes revenus 💵</button>
+            </div>
+
+            <!-- Objectif Épargne COLLAPSIBLE -->
+            <div class="savings-goal-section" id="savingsGoalSection">
+                <div class="savings-goal-header" id="savingsGoalHeader">
+                    <div class="savings-goal-title">
+                        <span class="collapse-icon" id="collapseIcon">▼</span>
+                        <h2>🐷 Mon Objectif d'Épargne 🐷</h2>
+                    </div>
+                    <div class="savings-goal-preview" id="savingsGoalPreview">
+                        <span class="preview-text">Objectif: <span id="previewAmount">0 €</span></span>
+                    </div>
+                </div>
+                <div class="savings-goal-content" id="savingsGoalContent">
+                    <div class="savings-goal-card">
+                        <div class="savings-goal-input">
+                            <label for="savingsGoal">💪 Je veux économiser ce mois-ci :</label>
+                            <input type="number" id="savingsGoal" class="cute-input" placeholder="0.00 €" step="0.01">
+                        </div>
+                        <button id="updateSavingsGoalBtn" class="btn-savings">🎯 Valider mon objectif 🎯</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card total-income">
+                    <div class="stat-icon">💰</div>
+                    <h3>Revenus Total</h3>
+                    <p class="stat-value" id="totalIncomeDisplay">0 €</p>
+                </div>
+                <div class="stat-card total-expenses">
+                    <div class="stat-icon">🛍️</div>
+                    <h3>Dépenses</h3>
+                    <p class="stat-value" id="totalExpensesDisplay">0 €</p>
+                </div>
+                <div class="stat-card savings-goal-stat">
+                    <div class="stat-icon">🎯</div>
+                    <h3>Objectif Épargne</h3>
+                    <p class="stat-value" id="savingsGoalDisplay">0 €</p>
+                </div>
+                <div class="stat-card actual-savings">
+                    <div class="stat-icon">🐷</div>
+                    <h3>Épargne Réelle</h3>
+                    <p class="stat-value" id="actualSavingsDisplay">0 €</p>
+                    <p class="stat-sub" id="savingsProgress"></p>
+                </div>
+                <div class="stat-card left">
+                    <div class="stat-icon">💕</div>
+                    <h3>Reste à dépenser</h3>
+                    <p class="stat-value" id="leftDisplay">0 €</p>
+                    <p class="stat-sub" id="leftWarning"></p>
+                </div>
+            </div>
+
+            <!-- Navigation des mois -->
+            <div class="month-navigation">
+                <button id="prevMonthBtn" class="nav-btn">◀ Mois précédent</button>
+                <div class="current-month-display">
+                    <span class="month-icon">📅</span>
+                    <span id="currentMonthDisplay">Mois actuel</span>
+                </div>
+                <button id="nextMonthBtn" class="nav-btn">Mois suivant ▶</button>
+                <button id="currentMonthBtn" class="nav-btn current-btn">📆 Mois en cours</button>
+            </div>
+
+            <!-- Vue Historique / Vue Actuelle -->
+            <div class="view-indicator" id="viewIndicator">
+                <span class="view-badge" id="viewBadge">📊 Vue: Mois en cours</span>
+            </div>
+
+            <!-- Chart et Dépenses -->
+            <div class="main-layout">
+                <div class="chart-section">
+                    <h2>🍩 Overall Doughnuts 🍩</h2>
+                    <div class="chart-container">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                    <div class="chart-legend" id="chartLegend"></div>
+                </div>
+
+                <div class="expenses-section">
+                    <h2 id="expensesSectionTitle">📝 Ajouter une dépense 📝</h2>
+                    <form id="expenseForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="category">📂 Catégorie</label>
+                                <select id="category" class="cute-select" required>
+                                    <optgroup label="🚗 TRANSPORTATION">
+                                        <option value="transport-gas">⛽ Gas</option>
+                                        <option value="transport-insurance">🚗 Insurance</option>
+                                        <option value="transport-carwash">🧼 Car wash</option>
+                                        <option value="transport-parking">🅿️ Parking</option>
+                                        <option value="transport-taxes">📄 Taxes</option>
+                                        <option value="transport-repair">🔧 Repair</option>
+                                    </optgroup>
+                                    <optgroup label="📱 SUBSCRIPTION">
+                                        <option value="sub-youtube">🎬 Youtube</option>
+                                        <option value="sub-icloud">☁️ Icloud</option>
+                                        <option value="sub-snapchat">👻 Snapchat</option>
+                                        <option value="sub-notability">📝 Notability</option>
+                                    </optgroup>
+                                    <optgroup label="🏥 HEALTH">
+                                        <option value="health-insurance">🏥 Insurance</option>
+                                        <option value="health-prescription">💊 Prescription</option>
+                                    </optgroup>
+                                    <optgroup label="🛍️ SHOPPING">
+                                        <option value="shopping-clothes">👗 Clothes</option>
+                                        <option value="shopping-shoes">👠 Shoes</option>
+                                        <option value="shopping-makeup">💄 Makeup</option>
+                                        <option value="shopping-books">📚 Books</option>
+                                        <option value="shopping-shithappens">🤷🏽‍♀️ Shit happens</option>
+                                    </optgroup>
+                                    <optgroup label="🎯 RECREATION">
+                                        <option value="rec-gym">💪 Gym</option>
+                                        <option value="rec-gymoutfit">🎽 Gym outfit</option>
+                                    </optgroup>
+                                    <optgroup label="🏠 DAILY LIVING">
+                                        <option value="daily-groceries">🛒 Groceries</option>
+                                        <option value="daily-dining">🍽️ Dinning out</option>
+                                        <option value="daily-bougie">✨ Felt bougie</option>
+                                    </optgroup>
+                                    <optgroup label="📋 RESPONSIBILITIES">
+                                        <option value="resp-car">🚙 Car payment</option>
+                                        <option value="resp-phone">📱 Phone bill</option>
+                                        <option value="resp-rent">🏠 Rent</option>
+                                        <option value="resp-debt">💳 Debt</option>
+                                        <option value="resp-housebill">💡 House bill</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="itemName">🏷️ Nom</label>
+                                <input type="text" id="itemName" placeholder="Ex: Petit café ☕" class="cute-input" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="amount">💶 Montant (€)</label>
+                                <input type="number" id="amount" step="0.01" placeholder="0.00" class="cute-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="date">📅 Date</label>
+                                <input type="date" id="date" class="cute-input" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-add" id="addExpenseBtn">💵 Ajouter la dépense 💵</button>
+                    </form>
+
+                    <div class="recent-expenses">
+                        <h3>📋 Liste des dépenses</h3>
+                        <div class="expenses-list" id="expensesList">
+                            <div class="empty-state">💵 Pas encore de dépenses ! 💵</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphique de progression annuelle -->
+            <div class="progress-chart-section">
+                <h2>📈 Ma Progression Annuelle 📈</h2>
+                <div class="year-progress-container">
+                    <canvas id="yearProgressChart"></canvas>
+                </div>
+                <div class="year-stats" id="yearStats"></div>
+            </div>
+
+            <!-- Message motivant fixe -->
+            <div class="motivation-message-fixed" id="motivationMessage"></div>
+        </div>
     </div>
 
     <script src="api.js"></script>
