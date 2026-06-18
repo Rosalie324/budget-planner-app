@@ -1,5 +1,5 @@
 // ========================================
-// script.js - Logique de l'application
+// script.js - Logique de l'application (VERSION CORRIGÉE)
 // ========================================
 
 let monthlySalary = 0;
@@ -192,7 +192,7 @@ function displayExpenses() {
                     <div class="expense-date">${formatDate(exp.date)}</div>
                 </div>
                 <div class="expense-amount">${exp.amount.toFixed(2)} €</div>
-                ${!isViewingHistory ? `<button class="delete-expense" onclick="deleteExpense('${exp.id}')">🗑️</button>` : ''}
+                <button class="delete-expense" onclick="deleteExpense('${exp.id}')">🗑️</button>
             </div>
         `;
     }).join('');
@@ -458,11 +458,18 @@ async function updateDisplayForMonth() {
         }
     }
     
+    // 🔥 LE BOUTON EST TOUJOURS ACTIF - ON PEUT AJOUTER DES DÉPENSES POUR N'IMPORTE QUEL MOIS
     const addBtn = getElement('addExpenseBtn');
     if (addBtn) {
-        addBtn.disabled = isViewingHistory;
-        addBtn.style.opacity = isViewingHistory ? '0.5' : '1';
-        addBtn.style.cursor = isViewingHistory ? 'not-allowed' : 'pointer';
+        addBtn.disabled = false;
+        addBtn.style.opacity = '1';
+        addBtn.style.cursor = 'pointer';
+        // Changer le texte pour indiquer le mois
+        if (isViewingHistory) {
+            addBtn.textContent = `💵 Ajouter une dépense pour ${monthNames[month-1]} ${year}`;
+        } else {
+            addBtn.textContent = '💵 Ajouter la dépense 💵';
+        }
     }
     
     setTextContent('totalIncomeDisplay', monthIncome.toFixed(2) + ' €');
@@ -515,18 +522,16 @@ function goToNextMonth() {
     const nextMonth = new Date(currentViewDate);
     nextMonth.setMonth(currentViewDate.getMonth() + 1);
     
-    if (nextMonth > today && isViewingHistory) {
+    // On peut aller jusqu'au mois en cours, pas au-delà
+    if (nextMonth > today) {
+        // Si on essaie d'aller au-delà du mois en cours, on revient au mois en cours
+        goToCurrentMonth();
         return;
     }
     
     currentViewDate.setMonth(currentViewDate.getMonth() + 1);
-    
-    if (currentViewDate > today) {
-        goToCurrentMonth();
-    } else {
-        isViewingHistory = true;
-        updateDisplayForMonth();
-    }
+    isViewingHistory = true;
+    updateDisplayForMonth();
 }
 
 function goToCurrentMonth() {
@@ -543,14 +548,9 @@ function toggleSavingsSection() {
     if (icon) icon.classList.toggle('collapsed');
 }
 
-// Ajouter une dépense
+// 🔥 NOUVELLE VERSION - AJOUTER UNE DÉPENSE POUR N'IMPORTE QUEL MOIS
 async function addExpense(event) {
     event.preventDefault();
-    
-    if (isViewingHistory) {
-        alert('📅 Tu es en mode historique ! Reviens au mois en cours pour ajouter des dépenses.');
-        return;
-    }
     
     const categoryEl = getElement('category');
     const nameEl = getElement('itemName');
@@ -562,9 +562,26 @@ async function addExpense(event) {
     const category = categoryEl.value;
     const name = nameEl.value;
     const amount = parseFloat(amountEl.value);
-    const date = dateEl.value;
+    let date = dateEl.value;
     
     if (!category || !name || !amount || !date) return;
+    
+    // Si on est en mode historique, la date est déjà celle du mois affiché
+    // Mais on vérifie que la date correspond bien au mois affiché
+    const selectedDate = new Date(date);
+    const viewYear = currentViewDate.getFullYear();
+    const viewMonth = currentViewDate.getMonth();
+    
+    // Si la date ne correspond pas au mois affiché, on la force
+    if (selectedDate.getFullYear() !== viewYear || selectedDate.getMonth() !== viewMonth) {
+        // On crée une date avec le mois affiché
+        const correctedDate = new Date(viewYear, viewMonth, 1);
+        // On garde le jour si possible, sinon on met le 1er
+        const day = Math.min(selectedDate.getDate(), new Date(viewYear, viewMonth + 1, 0).getDate());
+        correctedDate.setDate(day);
+        date = correctedDate.toISOString().split('T')[0];
+        dateEl.value = date;
+    }
     
     try {
         await addExpenseAPI(currentUserId, category, name, amount, date);
@@ -574,18 +591,18 @@ async function addExpense(event) {
         const form = getElement('expenseForm');
         if (form) form.reset();
         setDefaultDate();
+        
+        // Afficher un message de confirmation
+        const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        alert(`✅ Dépense ajoutée pour ${monthNames[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()} !`);
     } catch (error) {
         alert('Erreur lors de l\'ajout de la dépense. Vérifiez que le backend est accessible.');
+        console.error(error);
     }
 }
 
 // Supprimer une dépense
 async function deleteExpense(id) {
-    if (isViewingHistory) {
-        alert('📅 Tu es en mode historique ! Reviens au mois en cours pour modifier des dépenses.');
-        return;
-    }
-    
     if (confirm('Supprimer cette dépense ?')) {
         try {
             await deleteExpenseAPI(id);
@@ -707,8 +724,11 @@ function escapeHtml(text) {
 function setDefaultDate() {
     const dateInput = getElement('date');
     if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
+        // Par défaut, on met la date du mois affiché
+        const year = currentViewDate.getFullYear();
+        const month = String(currentViewDate.getMonth() + 1).padStart(2, '0');
+        const day = '01'; // Premier jour du mois
+        dateInput.value = `${year}-${month}-${day}`;
     }
 }
 
